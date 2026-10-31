@@ -6,7 +6,9 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Random;
 
 public class Generator {
@@ -37,6 +39,8 @@ public class Generator {
 
                 if (rawType == List.class) {
                     yield generateList(parameterizedType);
+                } else if (rawType == Map.class) {
+                    yield generateMap(parameterizedType);
                 }
 
                 throw new IllegalArgumentException("Unsupported parameterized type: " + type);
@@ -45,6 +49,26 @@ public class Generator {
             case null, default ->
                 throw new IllegalArgumentException("Unsupported generic parameter type: " + type);
         };
+    }
+
+    private <T> T generateMap(ParameterizedType parameterizedType)
+        throws InvocationTargetException, InstantiationException, IllegalAccessException {
+        Type[] typeArguments = parameterizedType.getActualTypeArguments();
+
+        if (typeArguments.length != 2) {
+            throw new IllegalArgumentException("Map must have exactly two type argument: " + parameterizedType);
+        }
+
+        Type keyType = typeArguments[0];
+        Type valueType = typeArguments[1];
+        int size = rnd.nextInt(0, 5);
+
+        Map<Object, Object> result = new HashMap<>(size);
+        for (int i = 0; i < size; i++) {
+            result.put(generateValue(keyType), generateValue(valueType));
+        }
+
+        return (T) result;
     }
 
     private <T> T generateList(ParameterizedType parameterizedType)
