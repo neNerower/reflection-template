@@ -3,6 +3,8 @@ package org.example.generator;
 import java.lang.reflect.Array;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
@@ -17,14 +19,53 @@ public class Generator {
         Constructor<T> randomConstructor = constructors[randomConstructorIndex];
 
         List<Object> list = new ArrayList<>();
-        for (Class<?> aClass : randomConstructor.getParameterTypes()) {
-            Object generateValue = generateValue(aClass);
+        for (Type type : randomConstructor.getGenericParameterTypes()) {
+            Object generateValue = generateValue(type);
             list.add(generateValue);
         }
         Object[] arguments = list.toArray();
 
         return randomConstructor.newInstance(arguments);
     }
+
+    @SuppressWarnings("unchecked")
+    private <T> T generateValue(Type type)
+        throws InvocationTargetException, InstantiationException, IllegalAccessException {
+        return switch (type) {
+            case ParameterizedType parameterizedType -> {
+                Type rawType = parameterizedType.getRawType();
+
+                if (rawType == List.class) {
+                    yield generateList(parameterizedType);
+                }
+
+                throw new IllegalArgumentException("Unsupported parameterized type: " + type);
+            }
+            case Class<?> clazz -> (T) generateValue(clazz);
+            case null, default ->
+                throw new IllegalArgumentException("Unsupported generic parameter type: " + type);
+        };
+    }
+
+    private <T> T generateList(ParameterizedType parameterizedType)
+        throws InvocationTargetException, InstantiationException, IllegalAccessException {
+        Type[] typeArguments = parameterizedType.getActualTypeArguments();
+
+        if (typeArguments.length != 1) {
+            throw new IllegalArgumentException("List must have exactly one type argument: " + parameterizedType);
+        }
+
+        Type elementType = typeArguments[0];
+        int size = rnd.nextInt(0, 5);
+
+        List<Object> result = new ArrayList<>(size);
+        for (int i = 0; i < size; i++) {
+            result.add(generateValue(elementType));
+        }
+
+        return (T) result;
+    }
+
 
     @SuppressWarnings("unchecked")
     private <T> T generateValue(Class<T> clazz)
