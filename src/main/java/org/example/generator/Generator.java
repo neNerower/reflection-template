@@ -1,8 +1,10 @@
 package org.example.generator;
 
+import java.lang.reflect.Array;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
-import java.util.Arrays;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Random;
 
 public class Generator {
@@ -14,15 +16,19 @@ public class Generator {
         int randomConstructorIndex = rnd.nextInt(constructors.length);
         Constructor<T> randomConstructor = constructors[randomConstructorIndex];
 
-        Object[] arguments = Arrays.stream(randomConstructor.getParameterTypes())
-            .map(this::generateValue)
-            .toArray();
+        List<Object> list = new ArrayList<>();
+        for (Class<?> aClass : randomConstructor.getParameterTypes()) {
+            Object generateValue = generateValue(aClass);
+            list.add(generateValue);
+        }
+        Object[] arguments = list.toArray();
 
         return randomConstructor.newInstance(arguments);
     }
 
     @SuppressWarnings("unchecked")
-    private <T> T generateValue(Class<T> clazz) {
+    private <T> T generateValue(Class<T> clazz)
+        throws InvocationTargetException, InstantiationException, IllegalAccessException {
         Object value;
 
         if (clazz == int.class || clazz == Integer.class) {
@@ -43,8 +49,18 @@ public class Generator {
             value = (char) ('a' + rnd.nextInt(26));
         } else if (clazz == String.class) {
             value = "value-" + rnd.nextInt();
+        } else if (clazz.isArray()) {
+            int length = rnd.nextInt(0, 5);
+            Class<?> componentType = clazz.getComponentType();
+            Object array = Array.newInstance(componentType, length);
+
+            for (int i = 0; i < length; i++) {
+                Object element = generateValue(componentType);
+                Array.set(array, i, element);
+            }
+            value = array;
         } else {
-            throw new IllegalArgumentException("Unsupported type: " + clazz);
+            value = generateValueOfType(clazz);
         }
 
         return (T) value;
