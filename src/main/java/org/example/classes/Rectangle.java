@@ -18,4 +18,12 @@ public class Rectangle implements Shape {
     public double getPerimeter() {
         return 2 * (length + width);
     }
+
+    @Override
+    public String toString() {
+        return "Rectangle{" +
+            "length=" + length +
+            ", width=" + width +
+            '}';
+    }
 }
