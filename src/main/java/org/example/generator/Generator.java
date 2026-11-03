@@ -4,6 +4,7 @@ import java.lang.reflect.Array;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.Proxy;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -15,8 +16,37 @@ public class Generator {
     private static final Random rnd = new Random();
 
     public <T> T generateValueOfType(Class<T> clazz) throws InvocationTargetException, InstantiationException, IllegalAccessException {
+        if (clazz.isInterface()) {
+            return generateInterface(clazz);
+        }
+
+        return generateConcreteClass(clazz);
+    }
+
+    @SuppressWarnings("unchecked")
+    private <T> T generateInterface(Class<T> clazz) {
+        return (T) Proxy.newProxyInstance(
+            clazz.getClassLoader(),
+            new Class<?>[]{clazz},
+            (proxy, method, args) -> {
+                Class<?> returnType = method.getReturnType();
+
+                // Методы без возвращаемого значения
+                if (returnType == void.class) {
+                    return null;
+                }
+
+                // Генерируем значение на основании возвращаемого типа
+                return generateValue(method.getGenericReturnType());
+            }
+        );
+    }
+
+    private <T> T generateConcreteClass(Class<T> clazz) throws InvocationTargetException, InstantiationException, IllegalAccessException {
+        // TODO фильтровать публичные конструкторы
         Constructor<T>[] constructors = (Constructor<T>[]) clazz.getDeclaredConstructors();
 
+        // TODO список публичных конструкторов может быть пустым
         int randomConstructorIndex = rnd.nextInt(constructors.length);
         Constructor<T> randomConstructor = constructors[randomConstructorIndex];
 
