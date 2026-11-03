@@ -144,6 +144,10 @@ public class Generator {
             value = (char) ('a' + rnd.nextInt(26));
         } else if (clazz == String.class) {
             value = "value-" + rnd.nextInt();
+        } else if (clazz.isEnum()) {
+            T[] constants = clazz.getEnumConstants();
+            int id = rnd.nextInt(constants.length);
+            value = constants[id];
         } else if (clazz.isArray()) {
             int length = rnd.nextInt(0, 5);
             Class<?> componentType = clazz.getComponentType();

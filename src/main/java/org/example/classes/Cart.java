@@ -6,14 +6,16 @@ import java.util.Map;
 public class Cart {
     private List<Product> items;
     private Map<String, Product> map;
+    private Status status;
 
     public Cart(List<Product> items) {
         this.items = items;
     }
 
-    public Cart(List<Product> items, Map<String, Product> map) {
+    public Cart(List<Product> items, Map<String, Product> map, Status status) {
         this.items = items;
         this.map = map;
+        this.status = status;
     }
 
     public List<Product> getItems() {
@@ -32,6 +34,7 @@ public class Cart {
         return "Cart{" +
             "items=" + items +
             ", map=" + map +
+            ", status=" + status +
             '}';
     }
 }
