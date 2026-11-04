@@ -8,6 +8,7 @@ import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Proxy;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -94,12 +95,18 @@ public class Generator {
 
     @SuppressWarnings("unchecked")
     private <T> T generateConcreteClass(Class<T> clazz) throws InvocationTargetException, InstantiationException, IllegalAccessException {
-        // TODO фильтровать публичные конструкторы
-        Constructor<T>[] constructors = (Constructor<T>[]) clazz.getDeclaredConstructors();
+        Constructor<T>[] publicConstructors = Arrays.stream(
+                (Constructor<T>[]) clazz.getDeclaredConstructors()
+            )
+            .filter(c -> Modifier.isPublic(c.getModifiers()))
+            .toArray(Constructor[]::new);
 
-        // TODO список публичных конструкторов может быть пустым
-        int randomConstructorIndex = rnd.nextInt(constructors.length);
-        Constructor<T> randomConstructor = constructors[randomConstructorIndex];
+        if (publicConstructors.length == 0) {
+            throw new IllegalArgumentException("%s does not have any public constructor".formatted(clazz.getName()));
+        }
+
+        int randomConstructorIndex = rnd.nextInt(publicConstructors.length);
+        Constructor<T> randomConstructor = publicConstructors[randomConstructorIndex];
 
         List<Object> list = new ArrayList<>();
         for (Type type : randomConstructor.getGenericParameterTypes()) {
