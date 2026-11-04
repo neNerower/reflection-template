@@ -28,6 +28,17 @@ public class Generator {
             return generateInterface(clazz);
         }
 
+        if (Modifier.isAbstract(clazz.getModifiers())) {
+            Generatable annotation = clazz.getAnnotation(Generatable.class);
+            if (annotation != null) {
+                return generateImplementation(clazz, annotation);
+            }
+
+            throw new IllegalArgumentException(
+                "Abstract class must have @Generatable annotation: %s".formatted(clazz.getName())
+            );
+        }
+
         return generateConcreteClass(clazz);
     }
 
