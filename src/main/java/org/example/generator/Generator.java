@@ -81,6 +81,7 @@ public class Generator {
         return generateConcreteClass(implementation.asSubclass(interfaceClass));
     }
 
+    @SuppressWarnings("unchecked")
     private <T> T generateConcreteClass(Class<T> clazz) throws InvocationTargetException, InstantiationException, IllegalAccessException {
         // TODO фильтровать публичные конструкторы
         Constructor<T>[] constructors = (Constructor<T>[]) clazz.getDeclaredConstructors();
@@ -120,6 +121,7 @@ public class Generator {
         };
     }
 
+    @SuppressWarnings("unchecked")
     private <T> T generateMap(ParameterizedType parameterizedType)
         throws InvocationTargetException, InstantiationException, IllegalAccessException {
         Type[] typeArguments = parameterizedType.getActualTypeArguments();
@@ -140,6 +142,7 @@ public class Generator {
         return (T) result;
     }
 
+    @SuppressWarnings("unchecked")
     private <T> T generateList(ParameterizedType parameterizedType)
         throws InvocationTargetException, InstantiationException, IllegalAccessException {
         Type[] typeArguments = parameterizedType.getActualTypeArguments();
