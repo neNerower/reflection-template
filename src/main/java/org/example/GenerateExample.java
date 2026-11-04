@@ -1,14 +1,14 @@
 package org.example;
 
 
-import org.example.classes.Shape;
+import org.example.classes.Cart;
 import org.example.generator.Generator;
 
 public class GenerateExample {
     public static void main(String[] args) {
         var gen = new Generator();
         try {
-            var generated = gen.generateValueOfType(Shape.class);
+            var generated = gen.generateValueOfType(Cart.class);
 
             System.out.println(generated);
 //            System.out.println(generated.getArea());

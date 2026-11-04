@@ -5,14 +5,14 @@ import java.util.Map;
 
 public class Cart {
     private List<Product> items;
-    private Map<String, Product> map;
+    private Map<String, List<Product>> map;
     private Status status;
 
     public Cart(List<Product> items) {
         this.items = items;
     }
 
-    public Cart(List<Product> items, Map<String, Product> map, Status status) {
+    public Cart(List<Product> items, Map<String, List<Product>> map, Status status) {
         this.items = items;
         this.map = map;
         this.status = status;
