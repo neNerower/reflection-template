@@ -3,6 +3,7 @@ package org.example.generator;
 import java.lang.reflect.Array;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Modifier;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Proxy;
 import java.lang.reflect.Type;
@@ -15,8 +16,15 @@ import java.util.Random;
 public class Generator {
     private static final Random rnd = new Random();
 
-    public <T> T generateValueOfType(Class<T> clazz) throws InvocationTargetException, InstantiationException, IllegalAccessException {
+    public <T> T generateValueOfType(Class<T> clazz)
+        throws InvocationTargetException, InstantiationException, IllegalAccessException
+    {
         if (clazz.isInterface()) {
+            Generatable annotation = clazz.getAnnotation(Generatable.class);
+            if (annotation != null) {
+                return generateImplementation(clazz, annotation);
+            }
+
             return generateInterface(clazz);
         }
 
@@ -40,6 +48,37 @@ public class Generator {
                 return generateValue(method.getGenericReturnType());
             }
         );
+    }
+
+    private <T> T generateImplementation(Class<T> interfaceClass, Generatable annotation)
+        throws InvocationTargetException, InstantiationException, IllegalAccessException
+    {
+        Class<?>[] implementations = annotation.implementations();
+
+        if (implementations.length == 0) {
+            throw new IllegalArgumentException(
+                "No implementations specified for " + interfaceClass.getName()
+            );
+        }
+
+        // Проверяем, что все классы действительно реализуют интерфейс
+        for (Class<?> implementation : implementations) {
+            if (!interfaceClass.isAssignableFrom(implementation)) {
+                throw new IllegalArgumentException(
+                    "%s does not implement %s".formatted(implementation.getName(), interfaceClass.getName())
+                );
+            }
+
+            if (implementation.isInterface() || Modifier.isAbstract(implementation.getModifiers())) {
+                throw new IllegalArgumentException(implementation.getName() + " is not a concrete class");
+            }
+        }
+
+        // Случайный выбор реализации
+        Class<?> implementation = implementations[rnd.nextInt(implementations.length)];
+
+        // Создание объекта выбранной реализации
+        return generateConcreteClass(implementation.asSubclass(interfaceClass));
     }
 
     private <T> T generateConcreteClass(Class<T> clazz) throws InvocationTargetException, InstantiationException, IllegalAccessException {
