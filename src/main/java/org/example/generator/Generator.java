@@ -18,8 +18,7 @@ public class Generator {
     private static final Random rnd = new Random();
 
     public <T> T generateValueOfType(Class<T> clazz)
-        throws InvocationTargetException, InstantiationException, IllegalAccessException
-    {
+        throws InvocationTargetException, InstantiationException, IllegalAccessException {
         if (clazz.isInterface()) {
             Generatable annotation = clazz.getAnnotation(Generatable.class);
             if (annotation != null) {
@@ -36,8 +35,7 @@ public class Generator {
             }
 
             throw new IllegalArgumentException(
-                "Abstract class must have @Generatable annotation: %s".formatted(clazz.getName())
-            );
+                "Abstract class must have @Generatable annotation: %s".formatted(clazz.getName()));
         }
 
         return generateConcreteClass(clazz);
@@ -45,40 +43,32 @@ public class Generator {
 
     @SuppressWarnings("unchecked")
     private <T> T generateInterface(Class<T> clazz) {
-        return (T) Proxy.newProxyInstance(
-            clazz.getClassLoader(),
-            new Class<?>[]{clazz},
-            (proxy, method, args) -> {
-                Class<?> returnType = method.getReturnType();
+        return (T) Proxy.newProxyInstance(clazz.getClassLoader(), new Class<?>[] {clazz}, (proxy, method, args) -> {
+            Class<?> returnType = method.getReturnType();
 
-                // Методы без возвращаемого значения
-                if (returnType == void.class) {
-                    return null;
-                }
-
-                // Генерируем значение на основании возвращаемого типа
-                return generateValue(method.getGenericReturnType());
+            // Методы без возвращаемого значения
+            if (returnType == void.class) {
+                return null;
             }
-        );
+
+            // Генерируем значение на основании возвращаемого типа
+            return generateValue(method.getGenericReturnType());
+        });
     }
 
     private <T> T generateImplementation(Class<T> interfaceClass, Generatable annotation)
-        throws InvocationTargetException, InstantiationException, IllegalAccessException
-    {
+        throws InvocationTargetException, InstantiationException, IllegalAccessException {
         Class<?>[] implementations = annotation.implementations();
 
         if (implementations.length == 0) {
-            throw new IllegalArgumentException(
-                "No implementations specified for " + interfaceClass.getName()
-            );
+            throw new IllegalArgumentException("No implementations specified for " + interfaceClass.getName());
         }
 
         // Проверяем, что все классы действительно реализуют интерфейс
         for (Class<?> implementation : implementations) {
             if (!interfaceClass.isAssignableFrom(implementation)) {
                 throw new IllegalArgumentException(
-                    "%s does not implement %s".formatted(implementation.getName(), interfaceClass.getName())
-                );
+                    "%s does not implement %s".formatted(implementation.getName(), interfaceClass.getName()));
             }
 
             if (implementation.isInterface() || Modifier.isAbstract(implementation.getModifiers())) {
@@ -94,12 +84,10 @@ public class Generator {
     }
 
     @SuppressWarnings("unchecked")
-    private <T> T generateConcreteClass(Class<T> clazz) throws InvocationTargetException, InstantiationException, IllegalAccessException {
-        Constructor<T>[] publicConstructors = Arrays.stream(
-                (Constructor<T>[]) clazz.getDeclaredConstructors()
-            )
-            .filter(c -> Modifier.isPublic(c.getModifiers()))
-            .toArray(Constructor[]::new);
+    private <T> T generateConcreteClass(Class<T> clazz)
+        throws InvocationTargetException, InstantiationException, IllegalAccessException {
+        Constructor<T>[] publicConstructors = Arrays.stream((Constructor<T>[]) clazz.getDeclaredConstructors())
+            .filter(c -> Modifier.isPublic(c.getModifiers())).toArray(Constructor[]::new);
 
         if (publicConstructors.length == 0) {
             throw new IllegalArgumentException("%s does not have any public constructor".formatted(clazz.getName()));
@@ -134,8 +122,7 @@ public class Generator {
                 throw new IllegalArgumentException("Unsupported parameterized type: " + type);
             }
             case Class<?> clazz -> (T) generateValue(clazz);
-            case null, default ->
-                throw new IllegalArgumentException("Unsupported generic parameter type: " + type);
+            case null, default -> throw new IllegalArgumentException("Unsupported generic parameter type: " + type);
         };
     }
 
