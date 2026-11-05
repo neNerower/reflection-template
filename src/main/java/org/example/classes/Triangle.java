@@ -21,4 +21,13 @@ public class Triangle implements Shape {
     public double getPerimeter() {
         return sideA + sideB + sideC;
     }
+
+    @Override
+    public String toString() {
+        return "Triangle{" +
+            "sideA=" + sideA +
+            ", sideB=" + sideB +
+            ", sideC=" + sideC +
+            '}';
+    }
 }
